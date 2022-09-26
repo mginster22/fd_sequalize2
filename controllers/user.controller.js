@@ -1,16 +1,26 @@
 const { Op } = require("sequelize");
+const _ = require("lodash");
 const createError = require("http-errors");
 const { User } = require("../models");
 
 module.exports.createUser = async (req, res, next) => {
   try {
     const { body } = req;
-    const createdUser = await User.create(body);
+    const values = _.pick(body, [
+      "firstName",
+      "lastName",
+      "email",
+      "password",
+      "isMale",
+      "birthday",
+    ]);
+    const createdUser = await User.create(values);
     if (!createdUser) {
       next(createError(400, "Try again"));
     }
-    createdUser.password = undefined;
-    res.status(201).send({ data: createdUser });
+    const user = createdUser.get();
+    user.password = undefined;
+    res.status(201).send({ data: user });
   } catch (error) {
     next(error);
   }
